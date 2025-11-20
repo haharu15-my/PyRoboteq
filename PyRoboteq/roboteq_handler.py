@@ -102,7 +102,7 @@ class RoboteqHandler:
         result = result.decode()
         result = result.split("\r")
         try:
-            return result[1]
+            return result[0]
         
         except IndexError: # will raise index error as sometimes the controller will return an odd answer, its rare, so its simply ignored.
             debug_return = "DEBUG MODE: Received faulty message, ignoring..."
