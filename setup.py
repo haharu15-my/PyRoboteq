@@ -3,6 +3,8 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+print("Hello World!")
+
 setuptools.setup(
     name="PyRoboteq",
     version="0.1.2",
