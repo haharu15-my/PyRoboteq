@@ -8,8 +8,8 @@ controller = RoboteqHandler(debug_mode=True, exit_on_interrupt=True)
 if controller.connect("COM3"):  # ポート名を適切に設定  
     print("接続成功")
     user_input = input("コマンド名を入力 (例: READ_MOTOR_AMPS): ")
-    command = getattr(cmds, user_input)
-    result = controller.read_value(cmds.READ,1)  
+    READ = getattr(cmds, user_input)
+    result = controller.read_value(READ,1)  
     print(f"測定結果: {result}")
 else:  
     print("接続に失敗しました")
