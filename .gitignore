@@ -1,2 +1,4 @@
 venv/
+build/
+PyRoboteq.egg-info
 __pycache__/
