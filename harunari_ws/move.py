@@ -16,28 +16,31 @@ if __name__ == "__main__":
                 print("W pressed")
                 drive_speed_motor_one = -200
                 drive_speed_motor_two  = -200
+                print(motor_amps)
 
             elif keyboard.is_pressed('s'):#後退
                 print("S pressed")
                 drive_speed_motor_one = 200
                 drive_speed_motor_two  = 200
+                print(motor_amps)
 
             elif keyboard.is_pressed('a'):#左回転
                 print("A pressed")
                 drive_speed_motor_one = -200
                 drive_speed_motor_two  = 200
+                print(motor_amps)
 
             elif keyboard.is_pressed('d'):#右回転
                 print("D pressed")
                 drive_speed_motor_one = 200
                 drive_speed_motor_two  = -200
+                print(motor_amps)
 
             else:
                 drive_speed_motor_one = 0
                 drive_speed_motor_two  = 0
 
             controller.send_command(cmds.DUAL_DRIVE, drive_speed_motor_one, drive_speed_motor_two)
-            print(motor_amps)
 
         except KeyboardInterrupt:
             break
