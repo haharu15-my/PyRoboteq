@@ -36,8 +36,4 @@ if __name__ == "__main__":
         controller.send_command(cmds.DUAL_DRIVE,drive_speed_motor_one, drive_speed_motor_two)
         motor_amps = controller.read_value(cmds.READ_MOTOR_AMPS, 0)
         print(motor_amps)
-#制作途中            
-
-        
-        
-
+#制作途中
