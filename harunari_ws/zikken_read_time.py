@@ -29,3 +29,5 @@ if controller.connect("COM3"):
 
     #print(f"{year}/{month}/{day} {hours}:{minutes}:{seconds}") 
 
+    uptime_seconds = controller.read_value("?TM")  # パラメータなし  
+    print(f"起動してからの秒数: {uptime_seconds}")
