@@ -5,14 +5,15 @@ import keyboard
 
 controller = RoboteqHandler()
 connected = controller.connect("COM3")
-controller.send_command(cmds.REL_EM_STOP)
+
+controller.send_command(cmds.REL_EM_STOP)# 電子緊急停止を解除
 
 if __name__ == "__main__":
     print("Press D to drive")
     print("Press S to stop")
     while connected:
-        speed1 = controller.read_value(cmds.READ_SPEED, 1)  
-        speed2 = controller.read_value(cmds.READ_SPEED, 2)
+        speed1 = controller.read_value(cmds.READ_BL_MOTOR_RPM, 1)  
+        speed2 = controller.read_value(cmds.READ_BL_MOTOR_RPM, 2)
 
         if keyboard.is_pressed('d'):
             #print("S pressed")
