@@ -14,3 +14,18 @@ if controller.connect("COM3"):
     # 時を読み取り
     hours = controller.read_value(cmds.READ_TIME, 3)
     print(f"時: {hours}")
+
+    # 日を読み取り
+    day = controller.read_value(cmds.READ_TIME, 4)
+    print(f"日: {day}")
+    
+    # 月を読み取り  
+    month = controller.read_value(cmds.READ_TIME,5)
+    print(f"月: {month}")
+    
+    # 年を読み取り
+    year = controller.read_value(cmds.READ_TIME,6)
+    print(f"年: {year}")
+
+    #print(f"{year}/{month}/{day} {hours}:{minutes}:{seconds}") 
+
