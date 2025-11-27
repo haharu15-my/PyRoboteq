@@ -128,7 +128,7 @@ class UnifiedTimeTracker:
 def main():  
     controller = RoboteqHandler(debug_mode=True, exit_on_interrupt=False)  
       
-    if controller.connect("COM9"):  
+    if controller.connect("COM3"):  
         print("コントローラに接続しました")  
           
         # 統合トラッカーを作成  
