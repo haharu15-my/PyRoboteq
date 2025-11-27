@@ -64,6 +64,9 @@ READ_VOLTS = "?V" # Read voltage measured
 READ_TIME = "?TM" # Read controller time (Real-Time Clock)
 READ_AMPS_LIMIT="~ALIM"
 READ_SEEK_POWOR="~BZPW"
+READ_1 ="?BMC" #使えるのか調査中　バッテリーの充電状態 (State Of Charge) をレポート
+READ_2 ="?BSC" #使えるのか調査中　バッテリーの充電状態 (State Of Charge) をレポート %表示
+
 
 # Maintenance commands
 # Contains few commands that are used occasionally to peform maintenance functions
