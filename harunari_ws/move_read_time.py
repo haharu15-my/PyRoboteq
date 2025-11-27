@@ -3,6 +3,8 @@ from PyRoboteq import roboteq_commands as cmds
 import time  
 import json  
 from datetime import datetime  
+
+#調整中
   
 class UnifiedTimeTracker:  
     def __init__(self, controller, current_threshold=0.1):  
