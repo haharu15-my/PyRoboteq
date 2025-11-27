@@ -60,7 +60,7 @@ READ_LOCKED = "?LK" # read lock status
 READ_MOTCMD = "?M" # Read motor command applied
 READ_TEMP = "?T" # Read controller temperature
 READ_VOLTS = "?V" # Read voltage measured
-
+READ_TIME = "?TM" # Read controller time (Real-Time Clock)
 
 # Maintenance commands
 # Contains few commands that are used occasionally to peform maintenance functions
