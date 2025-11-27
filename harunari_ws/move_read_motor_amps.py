@@ -4,7 +4,7 @@ import keyboard  # このライブラリを使うには管理者権限が必要
 
 controller = RoboteqHandler(debug_mode=False, exit_on_interrupt=False)
 connected = controller.connect("COM3")  # 環境に合わせて変更
-motor_amps = controller.read_value(cmds.READ_MOTOR_AMPS, 0)  # チャンネル1  
+motor_amps = controller.read_value(cmds.READ_MOTOR_AMPS, 0)  
 
 # 電子緊急停止を解除
 controller.send_command(cmds.REL_EM_STOP)
