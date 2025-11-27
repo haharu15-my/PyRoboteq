@@ -27,7 +27,7 @@ if controller.connect("COM3"):
     year = controller.read_value(cmds.READ_TIME,6)
     print(f"年: {year}")
 
-    #print(f"{year}/{month}/{day} {hours}:{minutes}:{seconds}") 
+    #print(f"{year}/{month}/{day} {hours}:{minutes}:{seconds}") 新しいモデル	個別日付要素（年月日時分秒）	用途：現在時刻の取得
 
     uptime_seconds = controller.read_value("?TM")  # パラメータなし  
-    print(f"起動してからの秒数: {uptime_seconds}")
+    print(f"起動してからの秒数: {uptime_seconds}") #古いモデル	32ビット秒カウンタ（アップタイム）	用途：稼働時間の計測
