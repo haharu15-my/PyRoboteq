@@ -15,6 +15,18 @@ stop_time = None
 torque_ready = False
 last_remaining = None
 
+def parse_rpm(value) -> int:
+    """
+    Roboteqから返る文字列 'BS=123' から整数値を抽出。
+    失敗した場合は0を返す。
+    """
+    if not isinstance(value, str):
+        value = str(value)  # 文字列に変換
+    try:
+        return int(value.split('=')[1])
+    except (IndexError, ValueError):
+        return 0
+
 if __name__ == "__main__":
     print("Press W to drive forward")
     print("Press S to stop manually")
@@ -22,9 +34,13 @@ if __name__ == "__main__":
 
     while connected:
         # モーター速度を取得
-        speed1 = int(controller.read_value(cmds.READ_BL_MOTOR_RPM, 1))
-        speed2 = int(controller.read_value(cmds.READ_BL_MOTOR_RPM, 2))
+        raw1 = controller.read_value(cmds.READ_BL_MOTOR_RPM, 1)
+        raw2 = controller.read_value(cmds.READ_BL_MOTOR_RPM, 2)
+
+        speed1 = parse_rpm(raw1)
+        speed2 = parse_rpm(raw2)
         avg_speed = (abs(speed1) + abs(speed2)) / 2
+        motor_amps = controller.read_value(cmds.READ_MOTOR_AMPS, 0)
 
         # ---- W key → forward ---------------------------------------------
         if keyboard.is_pressed('w'):
@@ -63,13 +79,14 @@ if __name__ == "__main__":
         # ---- Y key → torque command ---------------------------------------
         if torque_ready and keyboard.is_pressed('y'):
             print("Torque enabled!")
-            controller.send_command(cmds.GO_TORQUE, 1, 12.4)
-            controller.send_command(cmds.GO_TORQUE, 2, 12.4)
+            controller.send_command(cmds.GO_TORQUE, 1, 120)
+            controller.send_command(cmds.GO_TORQUE, 2, 120)
             torque_ready = False
             stop_time = None
             last_remaining = None
 
         # ---- モーターに速度送信 -------------------------------------------
         controller.send_command(cmds.DUAL_DRIVE, drive_speed_motor_one, drive_speed_motor_two)
+        print(motor_amps)
 
         time.sleep(0.05)
