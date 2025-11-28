@@ -22,8 +22,8 @@ if __name__ == "__main__":
 
     while connected:
         # モーター速度を取得
-        speed1 = controller.read_value(cmds.READ_BL_MOTOR_RPM, 1)
-        speed2 = controller.read_value(cmds.READ_BL_MOTOR_RPM, 2)
+        speed1 = int(controller.read_value(cmds.READ_BL_MOTOR_RPM, 1))
+        speed2 = int(controller.read_value(cmds.READ_BL_MOTOR_RPM, 2))
         avg_speed = (abs(speed1) + abs(speed2)) / 2
 
         # ---- W key → forward ---------------------------------------------
