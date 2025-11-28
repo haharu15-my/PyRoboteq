@@ -21,7 +21,7 @@ if __name__ == "__main__":
     while connected:  
         try:  
             # 稼働時間を読み取り（?TMコマンドを追加する必要あり）  
-            operating_time = controller.read_value(cmds.READ_TIME)  
+            operating_time = controller.read_value(cmds.READ_TIMES)  
               
             # バッテリー情報を読み取り  
             battery_amps = controller.read_value(cmds.READ_BATTERY_AMPS)  

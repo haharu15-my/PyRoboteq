@@ -59,7 +59,4 @@ if __name__ == "__main__":
         # ---- モーターへコマンド送信 -----------------------------------------
         controller.send_command(cmds.DUAL_DRIVE, drive_speed_motor_one, drive_speed_motor_two)
 
-        motor_amps = controller.read_value(cmds.READ_MOTOR_AMPS, 0)
-        print(motor_amps)
-
         time.sleep(0.05)

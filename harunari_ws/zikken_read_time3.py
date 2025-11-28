@@ -1,7 +1,6 @@
 def parse_tm(tm_str):
     """
-    正しいTMフォーマット:
-    TenMs : Sec : Min : Hour : Day : Year
+    TMフォーマット: TM=TenMs:Sec:Min:Hour:Day:Year
     """
     if tm_str.startswith("TM="):
         tm_str = tm_str[3:]
@@ -15,7 +14,6 @@ def parse_tm(tm_str):
     minute = int(parts[2])
     hour   = int(parts[3])
     day    = int(parts[4])
-    # year = parts[5]   # 今回は不要
 
     total_seconds = (
         day * 86400 +
@@ -26,4 +24,3 @@ def parse_tm(tm_str):
     )
     return total_seconds
 
-#不完全
