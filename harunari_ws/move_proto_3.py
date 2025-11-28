@@ -3,90 +3,94 @@ from PyRoboteq import roboteq_commands as cmds
 import time
 import keyboard
 
-controller = RoboteqHandler()
+controller = RoboteqHandler(debug_mode=False, exit_on_interrupt=False)
 connected = controller.connect("COM3")
 
-controller.send_command(cmds.REL_EM_STOP)  # 電子緊急停止を解除
+print("Roboteq connected:", connected)
 
-drive_speed_motor_one = 0
-drive_speed_motor_two = 0
-
-stop_time = None
-torque_ready = False
-last_remaining = None
-
+# --- 安全にRPMを整数化するための関数 ---
 def parse_rpm(value) -> int:
-    """
-    Roboteqから返る文字列 'BS=123' から整数値を抽出。
-    失敗した場合は0を返す。
-    """
     if not isinstance(value, str):
-        value = str(value)  # 文字列に変換
+        value = str(value)
     try:
         return int(value.split('=')[1])
     except (IndexError, ValueError):
         return 0
 
-if __name__ == "__main__":
-    print("Press W to drive forward")
-    print("Press S to stop manually")
-    print("If stuck: wait 10 seconds and press 'Y' to enable torque")
 
-    while connected:
-        # モーター速度を取得
+stall_detected = False
+stall_start_time = None
+countdown_done = False
+
+try:
+    while True:
+
+        # --- RPM 読み取り ---
         raw1 = controller.read_value(cmds.READ_BL_MOTOR_RPM, 1)
         raw2 = controller.read_value(cmds.READ_BL_MOTOR_RPM, 2)
 
         speed1 = parse_rpm(raw1)
         speed2 = parse_rpm(raw2)
+
         avg_speed = (abs(speed1) + abs(speed2)) / 2
-        motor_amps = controller.read_value(cmds.READ_MOTOR_AMPS, 0)
 
-        # ---- W key → forward ---------------------------------------------
-        if keyboard.is_pressed('w'):
-            drive_speed_motor_one = -100
-            drive_speed_motor_two  = -100
-            if stop_time is not None:
-                stop_time = None
-                last_remaining = None
-                torque_ready = False
+        # --- キー入力 ---
+        w = keyboard.is_pressed("w")
+        s = keyboard.is_pressed("s")
+        y = keyboard.is_pressed("y")
 
-        # ---- S key → manual stop -----------------------------------------
-        if keyboard.is_pressed('s'):
-            drive_speed_motor_one = 0
-            drive_speed_motor_two = 0
-            stop_time = None
-            last_remaining = None
-            torque_ready = False
+        # --- ▶ スタック条件：W が押されていて S が押されていない かつ 速度0 ---
+        current_stall_condition = (w and not s and avg_speed == 0)
 
-        # ---- 自動停止検知（W押し中で速度が0かつS押していない） ----
-        if keyboard.is_pressed('w') and avg_speed < 1 and not keyboard.is_pressed('s'):
-            if stop_time is None:
-                stop_time = time.time()
-                print("Stuck detected. Starting 10 sec timer...")
+        # --- スタック開始 ---
+        if current_stall_condition:
+            if not stall_detected:
+                stall_detected = True
+                stall_start_time = time.time()
+                countdown_done = False
+                print("\n=== スタック検知！停止後10秒カウント開始 ===")
+        else:
+            # 途中で速度が出たり、Wが離れたりしたらカウントダウン解除
+            if stall_detected:
+                print("\n--- カウントダウン解除（速度が回復 or 条件解除）---")
+            stall_detected = False
+            countdown_done = False
 
-        # ---- 停止後10秒経過チェック ----------------------------------------
-        if stop_time is not None:
-            elapsed = time.time() - stop_time
-            remaining = max(0, 10 - int(elapsed))
-            if remaining != last_remaining:
-                print(f"\rWaiting: {remaining} sec", end="")
-                last_remaining = remaining
-            if elapsed >= 10 and not torque_ready:
-                torque_ready = True
-                print("\n10 seconds passed. Press 'Y' to enable torque.")
+        # --- カウントダウン中 ---
+        if stall_detected and not countdown_done:
+            elapsed = time.time() - stall_start_time
+            remaining = int(10 - elapsed)
 
-        # ---- Y key → torque command ---------------------------------------
-        if torque_ready and keyboard.is_pressed('y'):
-            print("Torque enabled!")
-            controller.send_command(cmds.GO_TORQUE, 1, 120)
-            controller.send_command(cmds.GO_TORQUE, 2, 120)
-            torque_ready = False
-            stop_time = None
-            last_remaining = None
+            if remaining >= 0:
+                print(f"復帰待ち：{remaining} 秒", end="\r")
+            else:
+                countdown_done = True
+                print("\n--- 10秒経過。Yキーでトルク起動可能 ---")
 
-        # ---- モーターに速度送信 -------------------------------------------
-        controller.send_command(cmds.DUAL_DRIVE, drive_speed_motor_one, drive_speed_motor_two)
-        print(motor_amps)
+        # --- Y でトルクコマンド 5秒発動 ---
+        if countdown_done and y:
+            print("\n*** トルクコマンド 5秒発動！段差突破モード！ ***")
+
+            # 5秒トルク ON
+            torque_end_time = time.time() + 5
+            while time.time() < torque_end_time:
+                controller.send_command(cmds.GO_TORQUE, 1, 124)
+                controller.send_command(cmds.GO_TORQUE, 2, 124)
+                time.sleep(0.05)
+
+            # トルクOFF
+            controller.send_command(cmds.GO_TORQUE, 1, 0)
+            controller.send_command(cmds.GO_TORQUE, 2, 0)
+
+            print("*** トルク終了 ***")
+
+            # 状態リセット
+            countdown_done = False
+            stall_detected = False
+            stall_start_time = None
 
         time.sleep(0.05)
+
+except KeyboardInterrupt:
+    print("\n終了します")
+    controller.disconnect()

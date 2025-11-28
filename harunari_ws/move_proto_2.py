@@ -1,62 +1,72 @@
 from PyRoboteq import RoboteqHandler
 from PyRoboteq import roboteq_commands as cmds
-import time
 import keyboard
 
-controller = RoboteqHandler()
+controller = RoboteqHandler(debug_mode=False, exit_on_interrupt=False)
 connected = controller.connect("COM3")
 
-controller.send_command(cmds.REL_EM_STOP)  # 電子緊急停止を解除
+# 電子緊急停止解除
+controller.send_command(cmds.REL_EM_STOP)
 
-drive_speed_motor_one = 0
-drive_speed_motor_two = 0
+TARGET_CURRENT = 12.4   # 目標電流[A]
+Kp = 8                  # 調整用（高いほど反応が速い）
+MAX_TORQUE = 400        # 安全上限（環境に合わせて変更）
 
-# 停止したタイミングを記録するための変数
-stop_time = None
-torque_ready = False
+# トルク指令（GO_TORQUEへ渡す値）
+torque_left = 0
+torque_right = 0
 
 if __name__ == "__main__":
-    print("Press D to drive")
-    print("Press S to stop")
-    print("After stopping: wait 10 seconds and press 'y' to enable torque")
-
     while connected:
+        try:
+            # --- 現在の総電流を取得（0番は全体） ---
+            motor_amps = controller.read_value(cmds.READ_MOTOR_AMPS, 0)
+            try:
+                motor_amps = float(motor_amps)
+            except:
+                motor_amps = 0.0
 
-        speed1 = controller.read_value(cmds.READ_BL_MOTOR_RPM, 1)
-        speed2 = controller.read_value(cmds.READ_BL_MOTOR_RPM, 2)
+            # --- 現在のキー状態による方向制御（符号のみ使う） ---
+            forward = 0     # +1 or -1
+            turn = 0        # +1 or -1
 
-        # ---- D key → run ---------------------------------------------------
-        if keyboard.is_pressed('d'):
-            drive_speed_motor_one = -200
-            drive_speed_motor_two  = -200
-            stop_time = None            # 動き出したら停止タイマーはリセット
-            torque_ready = False
+            if keyboard.is_pressed('w'):
+                forward = -1   # Roboteqは負で前進
+                print("W pressed")
 
-        # ---- S key → stop --------------------------------------------------
-        if keyboard.is_pressed('s'):
-            drive_speed_motor_one = 0
-            drive_speed_motor_two = 0
+            elif keyboard.is_pressed('s'):
+                forward = 1
+                print("S pressed")
 
-            # 停止した瞬間に時間記録（stop_time が未設定なら記録）
-            if stop_time is None:
-                stop_time = time.time()
-                print("Stopped. Starting 10 sec timer...")
+            if keyboard.is_pressed('a'):
+                turn = 1
+                print("A pressed")
 
-        # ---- 停止後10秒経った？ --------------------------------------------------
-        if stop_time is not None:
-            if time.time() - stop_time >= 10:
-                torque_ready = True   # 10秒経過フラグ
-                # print("10 seconds passed. Press y to enable torque.")
+            elif keyboard.is_pressed('d'):
+                turn = -1
+                print("D pressed")
 
-        # ---- y を押したらトルクコマンド -----------------------------------
-        if torque_ready and keyboard.is_pressed('y'):
-            print("Torque enabled!")
-            controller.send_command(cmds.GO_TORQUE, 1, 124)
-            controller.send_command(cmds.GO_TORQUE, 2, 124)
-            torque_ready = False   # 再実行防止
-            stop_time = None       # 状態リセット
+            # --- 目標電流との差（偏差） ---
+            error = TARGET_CURRENT - motor_amps
 
-        # ---- モーターへコマンド送信 -----------------------------------------
-        controller.send_command(cmds.DUAL_DRIVE, drive_speed_motor_one, drive_speed_motor_two)
+            # --- P制御でトルクを調整 ---
+            torque_adjust = Kp * error
 
-        time.sleep(0.05)
+            # --- 左右のトルクの方向を決定 ---
+            # 前進/後退トルク + 回転トルク
+            torque_left  += torque_adjust * forward + (turn * torque_adjust)
+            torque_right += torque_adjust * forward - (turn * torque_adjust)
+
+            # --- リミット ---
+            torque_left  = max(-MAX_TORQUE, min(MAX_TORQUE, torque_left))
+            torque_right = max(-MAX_TORQUE, min(MAX_TORQUE, torque_right))
+
+            # --- トルクコマンド送信 ---
+            controller.send_command(cmds.GO_TORQUE, 1, int(torque_left))
+            controller.send_command(cmds.GO_TORQUE, 2, int(torque_right))
+
+            print(f"Current: {motor_amps:.2f} A | TL: {int(torque_left)}  TR: {int(torque_right)}")
+
+        except KeyboardInterrupt:
+            break
+
