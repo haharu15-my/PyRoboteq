@@ -1,3 +1,6 @@
+"""""
+モーターを動かしている時は常に12.4A流れるように調整して
+"""""
 from PyRoboteq import RoboteqHandler
 from PyRoboteq import roboteq_commands as cmds
 import keyboard
