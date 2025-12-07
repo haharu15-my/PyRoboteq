@@ -1,38 +1,50 @@
-from PyRoboteq import RoboteqHandler
-from PyRoboteq import roboteq_commands as cmds
 import time
-import keyboard
+import keyboard # キーボード入力を扱うためのライブラリ
 
-controller = RoboteqHandler()
-connected = controller.connect("COM3")
+COUNTDOWN_SECONDS = 10
 
-controller.send_command(cmds.REL_EM_STOP)# 電子緊急停止を解除
+def countdown_and_print():
+    """
+    10秒のカウントダウンを行い、終了後に指定の文字列を出力します。
+    カウントダウン中に 'y' キーが押された場合、処理を中断します。
+    """
+    print("🚀 10秒カウントダウン開始！")
+    print("⚠️ 中止するには 'y' キーを押してください。")
+    
+    is_cancelled = False
+
+    # 10秒から1秒までカウントダウン
+    for i in range(COUNTDOWN_SECONDS, 0, -1):
+        
+        # 現在の残り時間を表示
+        print(f"⏳ 残り {i} 秒...", end='\r')
+        
+        # --- キーボードチェック ---
+        # 1秒の待ち時間を、細かく分割してキー入力をチェックします。
+        # 1秒を100分割 (0.01秒間隔) してポーリングします。
+        for _ in range(100):
+            if keyboard.is_pressed('y'):
+                print("\n\n❌ 'y' キーが押されました。カウントダウンを中止します。")
+                is_cancelled = True
+                break # 内部ループ (0.01秒間隔のポーリング) を抜ける
+            time.sleep(0.01) # 短い時間待機
+        
+        if is_cancelled:
+            break # 外部ループ (カウントダウン) を抜ける
+
+    # 最終的な結果の出力
+    print("          ") # 残り時間の表示を消すためスペースで上書き
+    
+    if not is_cancelled:
+        # カウントダウンが完了した場合
+        print("✨ カウントダウン終了！")
+        # 要求された文字列を出力
+        print("ああ")
+    else:
+        # 中止された場合、次の操作のためにプログラムをすぐに終了させたいので、
+        # ここでは追加の出力をせず、コンソールをクリーンに保ちます。
+        pass
+
 
 if __name__ == "__main__":
-    print("Press D to drive")
-    print("Press S to stop")
-    while connected:
-        speed1 = controller.read_value(cmds.READ_BL_MOTOR_RPM, 1)  
-        speed2 = controller.read_value(cmds.READ_BL_MOTOR_RPM, 2)
-
-        if keyboard.is_pressed('d'):
-            #print("S pressed")
-            drive_speed_motor_one = -200
-            drive_speed_motor_two  = -200
-            current_speed_motor1 = -200
-            current_speed_motor2 =- 200
-
-            if current_speed_motor1 == 0 and current_speed_motor2 == 0:
-
-                controller.send_command(cmds.GO_TORQUE, 1, 124)  # モーター1を12.4Aのトルクを設定  
-                controller.send_command(cmds.GO_TORQUE, 2, 124)  # モーター2を12.4Aのトルクを設定
-                time.sleep(0.05) 
-            
-        if keyboard.is_pressed('s'):
-            #print("S pressed")
-            drive_speed_motor_one = 0
-            drive_speed_motor_two  = 0
-
-        
-        controller.send_command(cmds.DUAL_DRIVE,drive_speed_motor_one, drive_speed_motor_two)
-#制作途中
+    countdown_and_print()
