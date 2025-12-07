@@ -74,6 +74,7 @@ try:
             # 5秒トルク ON
             torque_end_time = time.time() + 5
             while time.time() < torque_end_time:
+                print("トルク発動中...")
                 controller.send_command(cmds.GO_TORQUE, 1, 124)
                 controller.send_command(cmds.GO_TORQUE, 2, 124)
                 time.sleep(0.05)

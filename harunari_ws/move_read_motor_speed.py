@@ -17,6 +17,16 @@ if __name__ == "__main__":
                 drive_speed_motor_one = -200
                 drive_speed_motor_two = -200
 
+            elif keyboard.is_pressed('e'):#後退
+                print("S pressed")
+                drive_speed_motor_one = -100
+                drive_speed_motor_two = -100
+
+            elif keyboard.is_pressed('r'):#後退
+                print("S pressed")
+                drive_speed_motor_one = -300
+                drive_speed_motor_two = -300
+            
             elif keyboard.is_pressed('s'):#後退
                 print("S pressed")
                 drive_speed_motor_one = 200

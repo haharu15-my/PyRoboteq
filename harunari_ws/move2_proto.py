@@ -25,8 +25,7 @@ if __name__ == "__main__":
             if current_speed_motor1 == 0 and current_speed_motor2 == 0:
 
                 controller.send_command(cmds.GO_TORQUE, 1, 124)  # モーター1を12.4Aのトルクを設定  
-                controller.send_command(cmds.GO_TORQUE, 2, 124)  # モーター2を12.4Aのトルクを設定
-                time.sleep(0.05) 
+                controller.send_command(cmds.GO_TORQUE, 2, 124)  # モーター2を12.4Aのトルクを設定 
             
         if keyboard.is_pressed('s'):
             #print("S pressed")
@@ -34,6 +33,7 @@ if __name__ == "__main__":
             drive_speed_motor_two  = 0
 
         
+        controller.send_command(cmds.DUAL_DRIVE,drive_speed_motor_one, drive_speed_motor_two)
         controller.send_command(cmds.DUAL_DRIVE,drive_speed_motor_one, drive_speed_motor_two)
         motor_amps = controller.read_value(cmds.READ_MOTOR_AMPS, 0)
         print(motor_amps)
