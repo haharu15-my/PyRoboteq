@@ -8,7 +8,7 @@ connected = controller.connect("COM3")  # 環境に合わせて変更
 # 電子緊急停止を解除
 controller.send_command(cmds.REL_EM_STOP)
 
-if __name__ == "__main__":
+def move():
     while connected:
         try:
             motor_amps = controller.read_value(cmds.READ_MOTOR_AMPS, 0) 
@@ -41,3 +41,6 @@ if __name__ == "__main__":
 
         except KeyboardInterrupt:
             break
+
+if __name__ == "__main__":
+    move()
