@@ -24,8 +24,8 @@ if __name__ == "__main__":
 
             if current_speed_motor1 == 0 and current_speed_motor2 == 0:
 
-                controller.send_command(cmds.GO_TORQUE, 1, 124)  # モーター1を12.4Aのトルクを設定  
-                controller.send_command(cmds.GO_TORQUE, 2, 124)  # モーター2を12.4Aのトルクを設定 
+                controller.send_command(cmds.GO_TORQUE, 1, 120)  # モーター1を12.4Aのトルクを設定  
+                controller.send_command(cmds.GO_TORQUE, 2, 120)  # モーター2を12.4Aのトルクを設定 
             
         if keyboard.is_pressed('s'):
             #print("S pressed")

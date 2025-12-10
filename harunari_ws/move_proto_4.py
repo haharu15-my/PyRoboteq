@@ -5,7 +5,7 @@ controller = RoboteqHandler(debug_mode=True)  # デバッグONで通信確認
 controller.connect("COM3")
 
 # トルク指令
-controller.send_command(cmds.GO_TORQUE, 1, 90)
+controller.send_command(cmds.GO_TORQUE, 1, 30)
 time.sleep(0.5)
 
 # 電流読み取り
