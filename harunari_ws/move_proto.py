@@ -19,10 +19,8 @@ if __name__ == "__main__":
             #print("S pressed")
             drive_speed_motor_one = -200
             drive_speed_motor_two  = -200
-            current_speed_motor1 = -200
-            current_speed_motor2 =- 200
 
-            if current_speed_motor1 == 0 and current_speed_motor2 == 0:
+            if speed1 == 0 and speed2 == 0:
 
                 controller.send_command(cmds.GO_TORQUE, 1, 124)  # モーター1を12.4Aのトルクを設定  
                 controller.send_command(cmds.GO_TORQUE, 2, 124)  # モーター2を12.4Aのトルクを設定
