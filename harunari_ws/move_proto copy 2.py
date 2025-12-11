@@ -32,6 +32,19 @@ class RobotController:
 
         else:
             return 0, 0
+    
+    def run(self):
+        try:
+            while True:
+                left_speed, right_speed = self.get_drive_speeds()
+                self.drive(left_speed, right_speed)
+
+                time.sleep(0.02)  # 負荷軽減
+
+        except KeyboardInterrupt:
+            print("停止中...")
+            self.drive(0, 0)
+
             
 if __name__ == "__main__":
     robot = RobotController(port="COM3")
