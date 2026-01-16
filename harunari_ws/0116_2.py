@@ -31,8 +31,8 @@ while connected:
 
         # ===== モータ指令 =====
         if driving:
-            drive_speed_motor_one = -200
-            drive_speed_motor_two = -200
+            drive_speed_motor_one = -100
+            drive_speed_motor_two = -100
         else:
             drive_speed_motor_one = 0
             drive_speed_motor_two = 0
