@@ -3,16 +3,13 @@ from PyRoboteq import roboteq_commands as cmds
 import keyboard
 import time
 
-# ===== Roboteq 接続 =====
 controller = RoboteqHandler(debug_mode=False, exit_on_interrupt=False)
 connected = controller.connect("COM3")
 controller.send_command(cmds.REL_EM_STOP)
 
-# ===== パラメータ =====
-RPM_THRESHOLD = 5
+AMP_THRESHOLD = 10.0     # 要調整
 STUCK_TIME = 1.0
 
-# ===== 状態変数 =====
 driving = False
 stuck_start_time = None
 stuck = False
@@ -21,7 +18,7 @@ print("W: forward / S: stop")
 
 while connected:
     try:
-        # ===== キー入力（イベント的に扱う）=====
+        # --- キー入力 ---
         if keyboard.is_pressed('w'):
             driving = True
         if keyboard.is_pressed('s'):
@@ -29,45 +26,32 @@ while connected:
             stuck_start_time = None
             stuck = False
 
-        # ===== モータ指令 =====
+        # --- モータ指令 ---
         if driving:
-            drive_speed_motor_one = -100
-            drive_speed_motor_two = -100
+            controller.send_command(cmds.DUAL_DRIVE, -100, -100)
         else:
-            drive_speed_motor_one = 0
-            drive_speed_motor_two = 0
+            controller.send_command(cmds.DUAL_DRIVE, 0, 0)
 
-        controller.send_command(
-            cmds.DUAL_DRIVE,
-            drive_speed_motor_one,
-            drive_speed_motor_two
-        )
-
-        # ===== 回転数取得 =====
-        rpm1 = controller.read_value(cmds.READ_BL_MOTOR_RPM, 1)
-        rpm2 = controller.read_value(cmds.READ_BL_MOTOR_RPM, 2)
-
+        # --- 電流値取得（安定） ---
+        motor_amps = controller.read_value(cmds.READ_MOTOR_AMPS, 0)
         try:
-            rpm1 = float(rpm1)
-            rpm2 = float(rpm2)
+            motor_amps = float(motor_amps)
         except (TypeError, ValueError):
             continue
 
-        # ===== スタック判定 =====
-        if driving:
-            if abs(rpm1) < RPM_THRESHOLD and abs(rpm2) < RPM_THRESHOLD:
-                if stuck_start_time is None:
-                    stuck_start_time = time.time()
-                elif time.time() - stuck_start_time >= STUCK_TIME:
-                    if not stuck:
-                        print("STUCK DETECTED")
-                        stuck = True
-            else:
-                stuck_start_time = None
-                stuck = False
+        print(f"driving:{driving} AMP:{motor_amps}")
 
-        # ===== 表示 =====
-        print(f"driving:{driving} RPM1:{rpm1:.1f} RPM2:{rpm2:.1f}")
+        # --- スタック判定 ---
+        if driving and motor_amps > AMP_THRESHOLD:
+            if stuck_start_time is None:
+                stuck_start_time = time.time()
+            elif time.time() - stuck_start_time >= STUCK_TIME:
+                if not stuck:
+                    print("STUCK DETECTED")
+                    stuck = True
+        else:
+            stuck_start_time = None
+            stuck = False
 
     except KeyboardInterrupt:
         controller.send_command(cmds.DUAL_DRIVE, 0, 0)
