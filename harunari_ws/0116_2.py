@@ -7,7 +7,7 @@ controller = RoboteqHandler(debug_mode=False, exit_on_interrupt=False)
 connected = controller.connect("COM3")
 controller.send_command(cmds.REL_EM_STOP)
 
-AMP_THRESHOLD = 10.0     # 要調整
+AMP_THRESHOLD = 10.0
 STUCK_TIME = 1.0
 
 driving = False
@@ -28,18 +28,22 @@ while connected:
 
         # --- モータ指令 ---
         if driving:
-            controller.send_command(cmds.DUAL_DRIVE, -100, -100)
+            controller.send_command(cmds.DUAL_DRIVE, -200, -200)
         else:
             controller.send_command(cmds.DUAL_DRIVE, 0, 0)
 
-        # --- 電流値取得（安定） ---
-        motor_amps = controller.read_value(cmds.READ_MOTOR_AMPS, 0)
+        # ===== 電流値取得（チャンネル別）=====
+        amp1 = controller.read_value(cmds.READ_MOTOR_AMPS, 1)
+        amp2 = controller.read_value(cmds.READ_MOTOR_AMPS, 2)
+
         try:
-            motor_amps = float(motor_amps)
+            amp1 = float(amp1)
+            amp2 = float(amp2)
         except (TypeError, ValueError):
             continue
 
-        print(f"driving:{driving} AMP:{motor_amps}")
+        motor_amps = max(abs(amp1), abs(amp2))
+        print(f"driving:{driving} AMP:{motor_amps:.2f}")
 
         # --- スタック判定 ---
         if driving and motor_amps > AMP_THRESHOLD:
@@ -57,3 +61,4 @@ while connected:
         controller.send_command(cmds.DUAL_DRIVE, 0, 0)
         print("Program stopped")
         break
+
