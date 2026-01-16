@@ -28,7 +28,7 @@ while connected:
 
         # --- モータ指令 ---
         if driving:
-            controller.send_command(cmds.DUAL_DRIVE, -200, -200)
+            controller.send_command(cmds.DUAL_DRIVE, -100, -100)
         else:
             controller.send_command(cmds.DUAL_DRIVE, 0, 0)
 
