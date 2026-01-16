@@ -71,12 +71,7 @@ if __name__ == "__main__":
                 amp_buffer.clear()
 
             # ===== スタック複合判定 =====
-            if (
-                driving
-                and abs(rpm1) < RPM_THRESHOLD
-                and abs(rpm2) < RPM_THRESHOLD
-                and len(amp_buffer) >= 10
-            ):
+            if (driving and abs(rpm1) < RPM_THRESHOLD and abs(rpm2) < RPM_THRESHOLD and len(amp_buffer) >= 10):
                 amp_max = max(amp_buffer)
                 amp_min = min(amp_buffer)
                 amp_avg = sum(amp_buffer) / len(amp_buffer)
@@ -101,4 +96,3 @@ if __name__ == "__main__":
 
         except KeyboardInterrupt:
             break
-
