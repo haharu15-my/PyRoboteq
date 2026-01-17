@@ -8,25 +8,31 @@ connected = controller.connect("COM3")
 controller.send_command(cmds.REL_EM_STOP)
 
 # ===== パラメータ =====
-RPM_THRESHOLD = 5            # これ以下なら回っていない
-AMP_THRESHOLD = 5.0          # 平均電流がこれ以上
-AMP_STABLE_WIDTH = 1.0       # 電流の変動幅（±1A）
-STUCK_TIME = 1.0             # 秒
+RPM_THRESHOLD = 5
+RPM_STUCK_TIME = 1.0
+
+AMP_WINDOW_TIME = 2.0        # 電流を見る時間[s] （短めに設定してリアルタイム判定）
+AMP_VARIATION = 3.0          # 変動幅[A]
 
 # ===== 状態変数 =====
-stuck_start_time = None
-stuck_flag = False
-amp_buffer = []
+rpm_stop_start = None
+
+amp_buffer1 = []
+amp_buffer2 = []
+
+stuck_flag1 = False   # 回転停止
+stuck_flag2 = False   # 電流張り付き
 
 if __name__ == "__main__":
     while connected:
         try:
-            # --- RPM取得 ---
+            # --- RPM ---
             speed_motor1 = controller.read_value(cmds.READ_BL_MOTOR_RPM, 1)
             speed_motor2 = controller.read_value(cmds.READ_BL_MOTOR_RPM, 2)
 
-            # --- 電流取得 ---
-            motor_amps = controller.read_value(cmds.READ_MOTOR_AMPS, 0)
+            # --- 電流（左右別） ---
+            motor_amps1 = controller.read_value(cmds.READ_MOTOR_AMPS, 1)
+            motor_amps2 = controller.read_value(cmds.READ_MOTOR_AMPS, 2)
 
             # --- 文字列対策 ---
             try:
@@ -34,16 +40,19 @@ if __name__ == "__main__":
                     speed_motor1 = speed_motor1.split('=')[-1]
                 if isinstance(speed_motor2, str):
                     speed_motor2 = speed_motor2.split('=')[-1]
-                if isinstance(motor_amps, str):
-                    motor_amps = motor_amps.split('=')[-1]
+                if isinstance(motor_amps1, str):
+                    motor_amps1 = motor_amps1.split('=')[-1]
+                if isinstance(motor_amps2, str):
+                    motor_amps2 = motor_amps2.split('=')[-1]
 
-                rpm1 = float(speed_motor1)
-                rpm2 = float(speed_motor2)
-                amps = abs(float(motor_amps))
+                rpm1 = abs(float(speed_motor1))
+                rpm2 = abs(float(speed_motor2))
+                amps1 = abs(float(motor_amps1))
+                amps2 = abs(float(motor_amps2))
             except (TypeError, ValueError):
                 continue
 
-            # --- キー入力 ---
+            # --- 走行指令 ---
             if keyboard.is_pressed('w'):
                 drive_speed_motor_one = -100
                 drive_speed_motor_two = -100
@@ -59,37 +68,49 @@ if __name__ == "__main__":
                 drive_speed_motor_two
             )
 
-            # --- ログ表示 ---
-            print(f"drive:{driving} RPM1:{rpm1:.1f} RPM2:{rpm2:.1f} AMP:{amps:.1f}")
+            # ===== stuck_flag1：回転停止 =====
+            if driving and rpm1 < RPM_THRESHOLD and rpm2 < RPM_THRESHOLD:
+                if rpm_stop_start is None:
+                    rpm_stop_start = time.time()
+                elif time.time() - rpm_stop_start >= RPM_STUCK_TIME:
+                    stuck_flag1 = True
+            else:
+                rpm_stop_start = None
+                stuck_flag1 = False
 
-            # ===== 電流バッファ更新 =====
+            # ===== stuck_flag2：電流張り付き（移動ウィンドウ判定） =====
             if driving:
-                amp_buffer.append(amps)
-                if len(amp_buffer) > 20:   # 約1秒分（0.05s × 20）
-                    amp_buffer.pop(0)
+                now = time.time()
+                # バッファに追加
+                amp_buffer1.append((now, amps1))
+                amp_buffer2.append((now, amps2))
+
+                # 古いデータを削除
+                amp_buffer1 = [(t, a) for t, a in amp_buffer1 if now - t <= AMP_WINDOW_TIME]
+                amp_buffer2 = [(t, a) for t, a in amp_buffer2 if now - t <= AMP_WINDOW_TIME]
+
+                # 変動幅を計算
+                amps1_list = [a for t, a in amp_buffer1]
+                amps2_list = [a for t, a in amp_buffer2]
+
+                amp_range1 = max(amps1_list) - min(amps1_list) if amps1_list else 0
+                amp_range2 = max(amps2_list) - min(amps2_list) if amps2_list else 0
+
+                stuck_flag2 = (amp_range1 < AMP_VARIATION) and (amp_range2 < AMP_VARIATION)
             else:
-                amp_buffer.clear()
+                amp_buffer1 = []
+                amp_buffer2 = []
+                stuck_flag2 = False
 
-            # ===== スタック複合判定 =====
-            if (driving and abs(rpm1) < RPM_THRESHOLD and abs(rpm2) < RPM_THRESHOLD and len(amp_buffer) >= 10):
-                amp_max = max(amp_buffer)
-                amp_min = min(amp_buffer)
-                amp_avg = sum(amp_buffer) / len(amp_buffer)
+            # --- 状態表示 ---
+            print(
+                f"RPM1:{rpm1:.1f} RPM2:{rpm2:.1f} "
+                f"AMP1:{amps1:.1f} AMP2:{amps2:.1f} "
+                f"flag1:{stuck_flag1} flag2:{stuck_flag2}"
+            )
 
-                if amp_avg > AMP_THRESHOLD and (amp_max - amp_min) < AMP_STABLE_WIDTH:
-                    if stuck_start_time is None:
-                        stuck_start_time = time.time()
-                    elif time.time() - stuck_start_time >= STUCK_TIME:
-                        stuck_flag = True
-                else:
-                    stuck_start_time = None
-                    stuck_flag = False
-            else:
-                stuck_start_time = None
-                stuck_flag = False
-
-            # --- スタック表示（解消まで出し続ける） ---
-            if stuck_flag:
+            # ===== 最終判定 =====
+            if stuck_flag1 and stuck_flag2:
                 print("STUCK DETECTED")
 
             time.sleep(0.05)
