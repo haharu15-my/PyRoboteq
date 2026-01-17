@@ -62,11 +62,7 @@ if __name__ == "__main__":
                 drive_speed_motor_two = 0
                 driving = False
 
-            controller.send_command(
-                cmds.DUAL_DRIVE,
-                drive_speed_motor_one,
-                drive_speed_motor_two
-            )
+            controller.send_command(cmds.DUAL_DRIVE, drive_speed_motor_one,drive_speed_motor_two)
 
             # ===== stuck_flag1：回転停止 =====
             if driving and rpm1 < RPM_THRESHOLD and rpm2 < RPM_THRESHOLD:

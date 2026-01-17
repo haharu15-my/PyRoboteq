@@ -10,6 +10,8 @@ class StuckDetector:
         self.RPM_STUCK_TIME = 1.0
         self.AMP_WINDOW_TIME = 2.0   # 秒
         self.AMP_VARIATION = 3.0     # A
+        self.PRE_STUCK_RATIO = 0.3   # 指令に対する実RPM比
+        self.PRE_STUCK_TIME = 0.2    # 秒
 
         # ===== 状態変数 =====
         self.rpm_stop_start = None
@@ -17,6 +19,10 @@ class StuckDetector:
         self.amp_buffer2 = []
         self.stuck_flag1 = False
         self.stuck_flag2 = False
+        self.pre_stuck_timer = 0.0
+        self.prev_rpm1 = 0.0
+        self.prev_rpm2 = 0.0
+        self.state = "NORMAL"  # NORMAL, PRE_STUCK, STUCK
 
         # ===== コントローラ初期化 =====
         self.controller = RoboteqHandler(debug_mode=False, exit_on_interrupt=False)
@@ -72,6 +78,23 @@ class StuckDetector:
                 drive1, drive2, driving = self.get_drive_command()
                 self.controller.send_command(cmds.DUAL_DRIVE, drive1, drive2)
 
+                # ===== PRE_STUCK判定（前兆） =====
+                if driving:
+                    # RPM急減判定
+                    if (self.prev_rpm1 > 0 and rpm1 < self.prev_rpm1 * self.PRE_STUCK_RATIO) and \
+                       (self.prev_rpm2 > 0 and rpm2 < self.prev_rpm2 * self.PRE_STUCK_RATIO):
+                        self.pre_stuck_timer += 0.05  # ループ周期と同じ
+                    else:
+                        self.pre_stuck_timer = 0.0
+
+                    if self.pre_stuck_timer >= self.PRE_STUCK_TIME and self.state == "NORMAL":
+                        self.state = "PRE_STUCK"
+                        print("PRE_STUCK detected")
+                else:
+                    self.pre_stuck_timer = 0.0
+                    if self.state == "PRE_STUCK":
+                        self.state = "NORMAL"
+
                 # ===== stuck_flag1: RPM停止 =====
                 if driving and rpm1 < self.RPM_THRESHOLD and rpm2 < self.RPM_THRESHOLD:
                     if self.rpm_stop_start is None:
@@ -87,11 +110,8 @@ class StuckDetector:
                 if driving:
                     self.amp_buffer1.append((now, amps1))
                     self.amp_buffer2.append((now, amps2))
-
-                    # 古いデータを削除
                     self.amp_buffer1 = [(t,a) for t,a in self.amp_buffer1 if now - t <= self.AMP_WINDOW_TIME]
                     self.amp_buffer2 = [(t,a) for t,a in self.amp_buffer2 if now - t <= self.AMP_WINDOW_TIME]
-
                     amps1_list = [a for t,a in self.amp_buffer1]
                     amps2_list = [a for t,a in self.amp_buffer2]
                     self.stuck_flag2 = (max(amps1_list)-min(amps1_list) < self.AMP_VARIATION) and \
@@ -104,11 +124,20 @@ class StuckDetector:
                 # ===== 状態表示 =====
                 print(f"RPM1:{rpm1:.1f} RPM2:{rpm2:.1f} "
                       f"AMP1:{amps1:.1f} AMP2:{amps2:.1f} "
-                      f"flag1:{self.stuck_flag1} flag2:{self.stuck_flag2}")
+                      f"flag1:{self.stuck_flag1} flag2:{self.stuck_flag2} "
+                      f"state:{self.state}")
 
                 # ===== 最終判定 =====
                 if self.stuck_flag1 and self.stuck_flag2:
-                    print("STUCK DETECTED")
+                    if self.state != "STUCK":
+                        self.state = "STUCK"
+                        print("STUCK detected → Torque Control")
+                        # ここでトルク制御関数を呼ぶ
+                        # self.controller.send_command(cmds.SWITCH_TO_TORQUE_MODE)
+
+                # ===== 前回RPM保存 =====
+                self.prev_rpm1 = rpm1
+                self.prev_rpm2 = rpm2
 
                 time.sleep(0.05)
 
@@ -116,8 +145,9 @@ class StuckDetector:
                 print("Program stopped by user.")
                 break
 
+
 if __name__ == "__main__":
     detector = StuckDetector(port="COM3")
     print("Connected:", detector.connected)
     detector.run()
-# 動作は成功　スタックの検知が遅い  スタックしているのに電流が1A変わるだけで解除されてしまう  
+# まだ成功　スタックの検知が遅い   RE_STUCK判定（前兆）を追加
