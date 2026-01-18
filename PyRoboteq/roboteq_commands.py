@@ -61,9 +61,8 @@ READ_MOTCMD = "?M" # Read motor command applied
 READ_TEMP = "?T" # Read controller temperature
 READ_VOLTS = "?V" # Read voltage measured
 #新しく追加
-READ_TIME="?TM" # Read controller time (Real-Time Clock)
 READ_AMPS_LIMIT="~ALIM"
-READ_SEEK_POWOR="~BZPW"
+READ_SEEK="~BZPW"
 READ_1 ="?BMC" #使えるのか調査中　バッテリーの充電状態 (State Of Charge) をレポート
 READ_2 ="?BSC" #使えるのか調査中　バッテリーの充電状態 (State Of Charge) をレポート %表示
 
