@@ -58,7 +58,7 @@ class StuckDetector:
         if keyboard.is_pressed('w'):
             return -100, -100, True  # 前進
         elif keyboard.is_pressed('s'):
-            return 100, 100, True    # 後退
+            return 200, 200, True    # 後退
         else:
             return 0, 0, False       # 停止
 

@@ -16,7 +16,7 @@ AMP_VARIATION = 3.0
 
 RECOVERY_TIME = 5.0
 RECOVERY_SPEED = -120
-NORMAL_SPEED = -100
+NORMAL_SPEED = -100 #前進
 
 # ===== 状態 =====
 rpm_stop_start = None
@@ -54,6 +54,10 @@ if __name__ == "__main__":
                 if keyboard.is_pressed('w'):
                     drive_m1 = NORMAL_SPEED
                     drive_m2 = NORMAL_SPEED
+                    driving = True
+                elif keyboard.is_pressed('s'): #後退
+                    drive_m1 = 150
+                    drive_m2 = 150
                     driving = True
                 else:
                     drive_m1 = 0
@@ -123,14 +127,11 @@ if __name__ == "__main__":
                 mode = "RECOVERY"
                 recovery_start = now
 
-            print(
-                f"MODE:{mode} "
-                f"RPM1:{rpm1:.1f} RPM2:{rpm2:.1f} "
-                f"AMP1:{amps1:.1f} AMP2:{amps2:.1f}"
-            )
+            print(f"MODE:{mode} " f"RPM1:{rpm1:.1f} RPM2:{rpm2:.1f} " f"AMP1:{amps1:.1f} AMP2:{amps2:.1f}")
 
             time.sleep(0.05)
 
         except KeyboardInterrupt:
             controller.send_command(cmds.DUAL_DRIVE, 0, 0)
             break
+#成功
