@@ -16,6 +16,7 @@ class StuckDetector:
         self.RECOVERY_TIME = 5.0
 
         # ===== 状態 =====
+        self.recovery_start_time = None
         self.state = "NORMAL"   # NORMAL, PRE_STUCK, RECOVERY, ERROR_STOP
         self.rpm_stop_start = None
         self.amp_buffer1 = []
@@ -62,7 +63,7 @@ class StuckDetector:
                 now = time.time()
 
                 # ===== 状態ごとの駆動 =====
-                if self.state == "NORMAL" or self.state == "PRE_STUCK":
+                if self.state == "NORMAL":
                     drive1, drive2, driving = self.get_manual_drive()
 
                 elif self.state == "RECOVERY":
@@ -70,17 +71,17 @@ class StuckDetector:
                     drive2 = self.RECOVERY_SPEED
                     driving = True
 
-                    if now - self.recovery_start >= self.RECOVERY_TIME:
-                        if rpm1 > self.RPM_THRESHOLD or rpm2 > self.RPM_THRESHOLD:
-                            print("RECOVERY SUCCESS → NORMAL")
-                            self.state = "NORMAL"
-                        else:
-                            print("RECOVERY FAILED → ERROR_STOP")
-                            self.state = "ERROR_STOP"
-
-                else:  # ERROR_STOP
+                # ----- 回復時間経過後に判定 -----
+                if now - self.recovery_start >= self.RECOVERY_TIME:
+                    if rpm1 > self.RPM_THRESHOLD or rpm2 > self.RPM_THRESHOLD:
+                        print("RECOVERY SUCCESS → NORMAL")
+                        self.state = "NORMAL"
+                    else:
+                        print("RECOVERY FAILED → SAFE STOP")
+                        self.state = "ERROR_STOP"
+                elif self.state == "ERROR_STOP":
                     self.controller.send_command(cmds.DUAL_DRIVE, 0, 0)
-                    print("SYSTEM HALTED")
+                    print("SYSTEM HALTED (SAFE STOP)")
                     break
 
                 self.controller.send_command(cmds.DUAL_DRIVE, drive1, drive2)
@@ -131,4 +132,4 @@ if __name__ == "__main__":
     print("Connected:", detector.connected)
     detector.run()
 
-#失敗した時のプログラムを入れる
+#失敗した時のプログラムを入れた　実験まだ

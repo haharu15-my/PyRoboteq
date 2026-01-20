@@ -8,24 +8,26 @@ class StuckDetector:
         # ===== パラメータ =====
         self.RPM_THRESHOLD = 5
         self.RPM_STUCK_TIME = 1.0
-        self.AMP_WINDOW_TIME = 2.0
+        self.AMP_WINDOW_TIME = 0.1 #元は2秒
         self.AMP_VARIATION = 3.0
 
         self.NORMAL_SPEED = -100
         self.RECOVERY_SPEED = -120
         self.RECOVERY_TIME = 5.0
 
+        self.STUCK_CONFIRM_TIME = 1.0 #２秒間スタック状態なら回復運動させるため
+        self.stuck_confirm_start = None
+        self.recovery_start = None
+
+
+
         # ===== 状態 =====
-        self.state = "NORMAL"   # NORMAL, PRE_STUCK, RECOVERY, ERROR_STOP
+        self.state = "NORMAL"   # NORMAL,STUCK, RECOVERY, ERROR_STOP
         self.rpm_stop_start = None
         self.amp_buffer1 = []
         self.amp_buffer2 = []
         self.stuck_flag1 = False
         self.stuck_flag2 = False
-        self.pre_stuck_timer = 0.0
-        self.prev_rpm1 = 0.0
-        self.prev_rpm2 = 0.0
-        self.recovery_start = 0.0
 
         # ===== コントローラ =====
         self.controller = RoboteqHandler(debug_mode=False, exit_on_interrupt=False)
@@ -51,7 +53,7 @@ class StuckDetector:
     def get_manual_drive(self):
         if keyboard.is_pressed('w'):
             return self.NORMAL_SPEED, self.NORMAL_SPEED, True
-        if keyboard.is_pressed('s'):
+        elif keyboard.is_pressed('s'):
             return 200, 200, True
         else:
             return 0, 0, False
@@ -64,7 +66,7 @@ class StuckDetector:
                 now = time.time()
 
                 # ===== 状態ごとの駆動 =====
-                if self.state == "NORMAL" or self.state == "PRE_STUCK":
+                if self.state == "NORMAL":
                     drive1, drive2, driving = self.get_manual_drive()
 
                 elif self.state == "RECOVERY":
@@ -72,17 +74,19 @@ class StuckDetector:
                     drive2 = self.RECOVERY_SPEED
                     driving = True
 
+                    # ----- 回復時間経過後に判定（RECOVERY中のみ） -----
                     if now - self.recovery_start >= self.RECOVERY_TIME:
                         if rpm1 > self.RPM_THRESHOLD or rpm2 > self.RPM_THRESHOLD:
                             print("RECOVERY SUCCESS → NORMAL")
                             self.state = "NORMAL"
+                            self.recovery_start = None
                         else:
-                            print("RECOVERY FAILED → ERROR_STOP")
+                            print("RECOVERY FAILED → SAFE STOP")
                             self.state = "ERROR_STOP"
 
-                else:  # ERROR_STOP
+                elif self.state == "ERROR_STOP":
                     self.controller.send_command(cmds.DUAL_DRIVE, 0, 0)
-                    print("SYSTEM HALTED")
+                    print("SYSTEM HALTED (SAFE STOP)")
                     break
 
                 self.controller.send_command(cmds.DUAL_DRIVE, drive1, drive2)
@@ -112,13 +116,25 @@ class StuckDetector:
                     self.amp_buffer2.clear()
                     self.stuck_flag2 = False
 
-                # ===== STUCK → RECOVERY =====
+                # ===== STUCK 判定（確定待ち付き）=====
                 if self.state == "NORMAL" and self.stuck_flag1 and self.stuck_flag2:
-                    print("STUCK detected → RECOVERY MODE")
-                    self.state = "RECOVERY"
-                    self.recovery_start = now
+                    if self.stuck_confirm_start is None:
+                        self.stuck_confirm_start = now
+                        self.state = "STUCK"
 
-                print(f"STATE:{self.state} "f"RPM1:{rpm1:.1f} RPM2:{rpm2:.1f} "f"AMP1:{amps1:.1f} AMP2:{amps2:.1f}")
+                elif self.state == "STUCK":
+                    if self.stuck_flag1 and self.stuck_flag2:
+                        if now - self.stuck_confirm_start >= self.STUCK_CONFIRM_TIME:
+                            print("STUCK confirmed → RECOVERY MODE")
+                            self.state = "RECOVERY"
+                            self.recovery_start = now
+                            self.stuck_confirm_start = None
+                    else:
+                        print("STUCK released → NORMAL")
+                        self.state = "NORMAL"
+                        self.stuck_confirm_start = None
+
+                print(f"STATE:{self.state} | "f"RPM1:{rpm1:.1f}RPM2:{rpm2:.1f}|"f"AMP1:{amps1:.1f}AMP2:{amps2:.1f}")
 
                 self.prev_rpm1 = rpm1
                 self.prev_rpm2 = rpm2
@@ -133,4 +149,5 @@ if __name__ == "__main__":
     print("Connected:", detector.connected)
     detector.run()
 
-#成功
+#失敗した時のプログラムの起動も確認した
+#kaihuku OK
