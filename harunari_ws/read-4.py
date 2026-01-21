@@ -15,7 +15,7 @@ DT = 1.0 / CONTROL_HZ
 
 # ===== PIゲイン =====
 Kp = 0.3
-Ki = 0.05      # ← 最初は小さめ！
+Ki = 0.01      # ← 最初は小さめ！
 
 # ================= 変換関数 =================
 def speed_ms_to_cmd(speed_ms):
@@ -66,7 +66,7 @@ def move():
             error = target_speed_ms - act_speed_ms
             integral_error += error * DT
 
-            cmd_speed_ms = Kp * error + Ki * integral_error
+            cmd_speed_ms = target_speed_ms + Kp * error + Ki * integral_error
 
             # -------- 指令送信 --------
             cmd_val = speed_ms_to_cmd(cmd_speed_ms)

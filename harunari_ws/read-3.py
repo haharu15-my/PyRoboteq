@@ -65,10 +65,10 @@ def move():
             # -------- P制御 --------
             error = target_speed_ms - act_speed_ms
             cmd_speed_ms = target_speed_ms + Kp * error
-            cmd_power_ms = cmd_speed_ms * -1000  # Roboteq指令値に変換
+            cmd_power_ms = cmd_speed_ms * 1000  # Roboteq指令値に変換
 
             # -------- 指令送信 --------
-            cmd_val = speed_ms_to_cmd(cmd_speed_ms)
+            cmd_val = speed_ms_to_cmd(cmd_power_ms)
             controller.send_command(cmds.DUAL_DRIVE, cmd_val, cmd_val)
 
             # -------- 表示 --------
