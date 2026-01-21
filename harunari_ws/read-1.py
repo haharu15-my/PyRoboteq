@@ -14,8 +14,8 @@ def move():
             motor_amps = controller.read_value(cmds.READ_MOTOR_AMPS, 0)
             motor_rpm = controller.read_value(cmds.READ_BL_MOTOR_RPM, 0)  # RPMで速度を読み取る
 
-            if keyboard.is_pressed('w'):#前進
-                print("W pressed")
+            if keyboard.is_pressed('a'):#前進
+                print("a pressed")
                 drive_speed_motor_one = -100
                 drive_speed_motor_two  = -100
 
@@ -24,7 +24,32 @@ def move():
                 drive_speed_motor_one = -125
                 drive_speed_motor_two  = -125
 
-            elif keyboard.is_pressed('x'):#停止
+            elif keyboard.is_pressed('d'):#後退
+                print("D pressed")
+                drive_speed_motor_one = -150
+                drive_speed_motor_two  = -150
+            
+            elif keyboard.is_pressed('f'):#後退
+                print("F pressed")
+                drive_speed_motor_one = -110
+                drive_speed_motor_two  = -110
+
+            elif keyboard.is_pressed('h'):#後退
+                print("H pressed")
+                drive_speed_motor_one = -90
+                drive_speed_motor_two  = -90
+
+            elif keyboard.is_pressed('g'):#左回転
+                print("G pressed")
+                drive_speed_motor_one = -200
+                drive_speed_motor_two  = -200
+
+            elif keyboard.is_pressed('z'):#右回転
+                print("Z pressed")
+                drive_speed_motor_one = 200
+                drive_speed_motor_two  = 200
+
+            else:
                 drive_speed_motor_one = 0
                 drive_speed_motor_two  = 0
 

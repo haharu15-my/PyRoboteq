@@ -134,7 +134,7 @@ class StuckDetector:
                         self.state = "NORMAL"
                         self.stuck_confirm_start = None
 
-                print(f"STATE:{self.state}|"f"RPM1:{rpm1:.1f}RPM2:{rpm2:.1f}|"f"AMP1:{amps1:.1f}AMP2:{amps2:.1f}")
+                print(f"STATE:{self.state},"f"RPM1:{rpm1:.1f},RPM2:{rpm2:.1f},"f"AMP1:{amps1:.1f},AMP2:{amps2:.1f}")
 
                 self.prev_rpm1 = rpm1
                 self.prev_rpm2 = rpm2
