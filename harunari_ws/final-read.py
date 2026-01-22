@@ -45,6 +45,7 @@ class KeyboardPControl:
                 self.update_target()
                 act = self.read_actual_speed()
                 err = self.target_speed - act
+                motor_amps = self.controller.read_value(cmds.READ_MOTOR_AMPS, 0)
 
                 # ---- P制御 ----
                 cmd_speed = self.target_speed + self.Kp * err
@@ -62,6 +63,7 @@ class KeyboardPControl:
                     f"ACT:{act:+.2f} "
                     f"ERR:{err:+.2f} "
                     f"CMD:{cmd}"
+                    f" AMPS:{motor_amps}"
                 )
 
                 time.sleep(self.dt)

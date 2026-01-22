@@ -7,10 +7,7 @@ class StuckPIController:
     def __init__(self, port="COM3"):
         # ===== PI制御パラメータ =====
         self.Kp_normal = 0.5
-        self.Ki_normal = 50.0
-
         self.Kp_recovery = 1.0
-        self.Ki_recovery = 120.0
 
         self.integral_error = 0.0
         self.dt = 0.05
@@ -133,17 +130,15 @@ class StuckPIController:
             # ===== PI制御 =====
             if self.state == "RECOVERY":
                 Kp = self.Kp_recovery
-                Ki = self.Ki_recovery
                 CMD_MAX = self.CMD_MAX_RECOVERY
             else:
                 Kp = self.Kp_normal
-                Ki = self.Ki_normal
                 CMD_MAX = self.CMD_MAX_NORMAL
 
             error = self.target_speed_ms - actual_speed
             self.integral_error += error * self.dt
 
-            cmd = Kp * error + Ki * self.integral_error
+            cmd = self.target_speed_ms + Kp * error
             cmd = max(min(cmd, CMD_MAX), -CMD_MAX)
 
             self.controller.send_command(cmds.DUAL_DRIVE, int(cmd), int(cmd))

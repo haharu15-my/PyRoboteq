@@ -49,19 +49,20 @@ class FF_P_Controller:
     # -----------------------------
     def update_target(self):
         if keyboard.is_pressed('w'):
-            self.target_speed = 0.1
+            self.target_speed = 0.12
+
         elif keyboard.is_pressed('s'):
-            self.target_speed = -0.1
+            self.target_speed = -0.2
         else:
             self.target_speed = 0.0
 
     # -----------------------------
     # FF + P 制御
     # -----------------------------
-    def compute_cmd(self, target, actual):
+    def compute_cmd(self, target, actual, ):
         error = target - actual
 
-        ff_cmd = int(-target * 1000)
+        ff_cmd = int(-target * 870)  # feedforwardゲイン調整用
         p_cmd  = int(-self.Kp * error * 1000)
 
         cmd = ff_cmd + p_cmd

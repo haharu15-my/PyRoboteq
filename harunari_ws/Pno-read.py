@@ -4,17 +4,16 @@ import keyboard
 import time
 import math
 
-class KeyboardPControl:
+class KeyboardOpenLoopControl:
     def __init__(self, port="COM3"):
         self.controller = RoboteqHandler()
         self.connected = self.controller.connect(port)
         self.controller.send_command(cmds.REL_EM_STOP)
 
         # ===== パラメータ =====
-        self.Kp = 0.5 # P制御ゲイン
-        self.WHEEL_RADIUS = 0.13 # 車輪半径[m]
-        self.GEAR_RATIO = 25 # ギア比
-        self.dt = 0.05 # 制御周期[s]
+        self.WHEEL_RADIUS = 0.13   # 車輪半径[m]
+        self.GEAR_RATIO = 25
+        self.dt = 0.05
 
         self.target_speed = 0.0
 
@@ -26,14 +25,14 @@ class KeyboardPControl:
         else:
             motor_rpm = float(raw)
 
-        motor_rpm = -motor_rpm  # 前進符号合わせ
+        motor_rpm = -motor_rpm
         wheel_rpm = motor_rpm / self.GEAR_RATIO
         speed = (2 * math.pi * self.WHEEL_RADIUS * wheel_rpm) / 60.0
         return speed
 
     def update_target(self):
         if keyboard.is_pressed("w"):
-            self.target_speed = 0.1
+            self.target_speed = 0.08
         elif keyboard.is_pressed("s"):
             self.target_speed = -0.2
         else:
@@ -44,12 +43,12 @@ class KeyboardPControl:
             while True:
                 self.update_target()
                 act = self.read_actual_speed()
-                err = self.target_speed - act
+                motor_amps = self.controller.read_value(cmds.READ_MOTOR_AMPS, 0)
 
-                # ---- P制御 ----
-                cmd_speed = self.target_speed + self.Kp * err
+                # ---- Open Loop（P制御なし）----
+                cmd_speed = self.target_speed
 
-                # m/s → Roboteq CMD
+                # m/s → Roboteq CMD（経験的スケーリング）
                 cmd = int(-cmd_speed * 1000)
 
                 # 飽和
@@ -60,8 +59,8 @@ class KeyboardPControl:
                 print(
                     f"TARGET:{self.target_speed:+.2f} "
                     f"ACT:{act:+.2f} "
-                    f"ERR:{err:+.2f} "
-                    f"CMD:{cmd}"
+                    f"CMD:{cmd} "
+                    f"AMPS:{motor_amps}"
                 )
 
                 time.sleep(self.dt)
@@ -71,4 +70,4 @@ class KeyboardPControl:
             print("制御停止")
 
 if __name__ == "__main__":
-    KeyboardPControl().run()
+    KeyboardOpenLoopControl().run()

@@ -1,0 +1,123 @@
+from PyRoboteq import RoboteqHandler
+from PyRoboteq import roboteq_commands as cmds
+import keyboard
+import time
+import math
+
+class FF_P_Controller:
+    def __init__(self, port="COM3"):
+        self.controller = RoboteqHandler()
+        self.connected = self.controller.connect(port)
+        self.controller.send_command(cmds.REL_EM_STOP)
+
+        # ===== パラメータ =====
+        self.Kp = 0.8                 # Pゲイン（まずは0.3〜0.8）
+        self.dt = 0.05
+
+        self.MAX_CMD = 1000
+
+        # ロボットパラメータ
+        self.WHEEL_RADIUS = 0.13      # [m]
+        self.GEAR_RATIO = 25
+
+        self.target_speed = 0.0
+        self.ff_gain = 870  # feedforwardゲイン調整用
+        self.SPEED_MARGIN = 0.01   # 許容超過 [m/s]
+        self.BRAKE_CMD = 30        # 超過時の弱ブレーキ量
+        self.OVER_SPEED = 0.02    # 超過判定
+        self.RELEASE_SPEED = 0.01  # 解除判定（小さく）
+
+
+
+    # -----------------------------
+    # RPM → m/s
+    # -----------------------------
+    def rpm_to_speed(self, motor_rpm):
+        wheel_rpm = motor_rpm / self.GEAR_RATIO
+        return (2 * math.pi * self.WHEEL_RADIUS * wheel_rpm) / 60.0
+
+    def parse_rpm(self, val):
+        if isinstance(val, str) and '=' in val:
+            val = val.split('=')[-1]
+        try:
+            return float(val)
+        except:
+            return 0.0
+
+    def read_actual_speed(self):
+        rpm = self.parse_rpm(
+            self.controller.read_value(cmds.READ_BL_MOTOR_RPM, 1)
+        )
+        rpm = -rpm   # 前進を正に揃える
+        return self.rpm_to_speed(rpm)
+
+    # -----------------------------
+    # キーボード入力
+    # -----------------------------
+    def update_target(self):
+        if keyboard.is_pressed('w'):
+            self.target_speed = 0.11
+
+        elif keyboard.is_pressed('s'):
+            self.target_speed = -0.2
+        else:
+            self.target_speed = 0.0
+
+    # -----------------------------
+    # FF + P 制御
+    # -----------------------------
+    def compute_cmd(self, target, actual):
+        error = target - actual
+
+    # --- FF + P ---
+        ff_cmd = int(-target * self.ff_gain)
+        p_cmd  = int(-self.Kp * error * 1000)
+        cmd = ff_cmd + p_cmd
+
+        # ==============================
+        # 速度超過抑制ロジック（核心）
+        # =============================
+        # 速度超過抑制
+        if actual > target + self.OVER_SPEED:
+    # 強制的に抑制モード
+            cmd = max(cmd, ff_cmd + 15)
+
+        elif actual < target + self.RELEASE_SPEED:
+            # 通常制御に戻す
+            pass
+    # 出力制限
+        cmd = max(min(cmd, self.MAX_CMD), -self.MAX_CMD)
+
+        return cmd, error
+
+
+    # -----------------------------
+    def run(self):
+        print("FF + P control start")
+        try:
+            while True:
+                self.update_target()
+                actual = self.read_actual_speed()
+
+                cmd, err = self.compute_cmd(self.target_speed, actual)
+
+                self.controller.send_command(cmds.DUAL_DRIVE, cmd, cmd)
+
+                print(
+                    f"TARGET:{self.target_speed:+.2f} "
+                    f"ACT:{actual:+.2f} "
+                    f"ERR:{err:+.2f} "
+                    f"CMD:{cmd}"
+                )
+
+                time.sleep(self.dt)
+
+        except KeyboardInterrupt:
+            self.controller.send_command(cmds.DUAL_DRIVE, 0, 0)
+            print("STOP")
+
+# -----------------------------
+if __name__ == "__main__":
+    ctrl = FF_P_Controller("COM3")
+    ctrl.run()
+#ACT が TARGET を超えたら即座に CMD を抑制する

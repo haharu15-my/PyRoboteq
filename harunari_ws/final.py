@@ -11,8 +11,8 @@ class StuckDetector:
         self.AMP_WINDOW_TIME = 0.1 #元は2秒
         self.AMP_VARIATION = 3.0
 
-        self.NORMAL_SPEED = -90
-        self.RECOVERY_SPEED = -100
+        self.NORMAL_SPEED = -100
+        self.RECOVERY_SPEED = -130
         self.RECOVERY_TIME = 5.0
 
         self.STUCK_CONFIRM_TIME = 2.0 #２秒間スタック状態なら回復運動させるため
