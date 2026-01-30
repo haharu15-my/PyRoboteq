@@ -9,57 +9,72 @@ connected = controller.connect("COM3")  # 環境に合わせて変更
 # 電子緊急停止を解除
 controller.send_command(cmds.REL_EM_STOP)
 
-FORWARD_CMD = -100  # 前進コマンド（必要なら変更）
+# ===== 指令値 =====
+FORWARD_CMD = -100   # 前進
+REVERSE_CMD =  200   # 後退（強めに戻したい想定）
 
-# 状態
-state = "IDLE"          # IDLE, COUNTDOWN, RUN
-countdown_start = None  # カウントダウン開始時刻
+# ===== 状態 =====
+state = "IDLE"            # IDLE, COUNTDOWN_FWD, RUN_FWD, RUN_REV
+countdown_start = None
 
 def set_drive(cmd):
     controller.send_command(cmds.DUAL_DRIVE, cmd, cmd)
 
+def stop_all():
+    global state, countdown_start
+    state = "IDLE"
+    countdown_start = None
+    set_drive(0)
+
 def move():
     global state, countdown_start
 
-    # 念のため最初は停止
-    set_drive(0)
+    stop_all()  # 念のため最初は停止
 
     while connected:
         try:
-            # ---- 緊急停止（ソフト側） ----
+            # ---- 最優先：停止 ----
             if keyboard.is_pressed('s'):
-                if state != "IDLE":
-                    print("STOP (S pressed)")
-                state = "IDLE"
-                countdown_start = None
-                set_drive(0)
+                print("STOP (S pressed)")
+                stop_all()
                 time.sleep(0.3)  # チャタリング防止
                 continue
 
-            # ---- W 押下でカウントダウン開始 ----
+            # ---- x：即後退（カウントダウン無し） ----
+            if keyboard.is_pressed('x'):
+                if state != "RUN_REV":
+                    print("REVERSE START (X pressed) -> RUN_REV (no countdown)")
+                state = "RUN_REV"
+                countdown_start = None
+                time.sleep(0.3)
+                # continue しない（この周回でRUN_REVを実行させる）
+
+            # ---- w：前進は3秒カウントダウン ----
             if keyboard.is_pressed('w') and state == "IDLE":
-                state = "COUNTDOWN"
+                state = "COUNTDOWN_FWD"
                 countdown_start = time.time()
-                print("W pressed -> Countdown 3s")
-                time.sleep(0.3)  # チャタリング防止
+                print("FORWARD START (W pressed) -> Countdown 3s")
+                time.sleep(0.3)
 
             # ---- 状態処理 ----
-            if state == "COUNTDOWN":
+            if state == "COUNTDOWN_FWD":
                 elapsed = time.time() - countdown_start
                 remaining = 3.0 - elapsed
 
-                # カウント中は安全のため停止指令
+                # カウント中は停止指令（安全）
                 set_drive(0)
 
                 if remaining > 0:
-                    # 表示がうるさければ間引いてもOK
                     print(f"COUNTDOWN: {remaining:.1f}s")
                 else:
-                    state = "RUN"
-                    print("GO! -> RUN")
+                    state = "RUN_FWD"
+                    print("GO! -> RUN_FWD")
 
-            elif state == "RUN":
+            elif state == "RUN_FWD":
                 set_drive(FORWARD_CMD)
+
+            elif state == "RUN_REV":
+                set_drive(REVERSE_CMD)
 
             else:  # IDLE
                 set_drive(0)
@@ -74,8 +89,7 @@ def move():
         except KeyboardInterrupt:
             break
 
-    # 終了時は停止
-    set_drive(0)
+    stop_all()
 
 if __name__ == "__main__":
     move()
