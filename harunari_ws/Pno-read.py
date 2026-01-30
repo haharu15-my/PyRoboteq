@@ -32,7 +32,7 @@ class KeyboardOpenLoopControl:
 
     def update_target(self):
         if keyboard.is_pressed("w"):
-            self.target_speed = 0.08
+            self.target_speed = 0.13
         elif keyboard.is_pressed("s"):
             self.target_speed = -0.2
         else:

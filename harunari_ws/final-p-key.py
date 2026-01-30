@@ -11,7 +11,7 @@ class KeyboardPControl:
         self.controller.send_command(cmds.REL_EM_STOP)
 
         # ===== パラメータ =====
-        self.Kp = 0.5 # P制御ゲイン
+        self.Kp = 0.6 # P制御ゲイン
         self.WHEEL_RADIUS = 0.13 # 車輪半径[m]
         self.GEAR_RATIO = 25 # ギア比
         self.dt = 0.05 # 制御周期[s]
@@ -33,7 +33,7 @@ class KeyboardPControl:
 
     def update_target(self):
         if keyboard.is_pressed("w"):
-            self.target_speed = 0.1
+            self.target_speed = 0.09
         elif keyboard.is_pressed("s"):
             self.target_speed = -0.2
         else:

@@ -54,7 +54,8 @@ def move():
                 drive_speed_motor_two  = 0
 
             controller.send_command(cmds.DUAL_DRIVE, drive_speed_motor_one, drive_speed_motor_two)
-            print(motor_amps, motor_rpm)
+            #print(motor_rpm)
+            print(motor_amps)
 
         except KeyboardInterrupt:
             break

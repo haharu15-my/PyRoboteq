@@ -12,8 +12,8 @@ class KeyboardPControlWithStuck:
             self.controller.send_command(cmds.REL_EM_STOP)
 
         # ===== P制御パラメータ =====
-        self.Kp_normal = 0.5
-        self.Kp_stuck = 1.0
+        self.Kp_normal = 0.5  # 通常時のKp
+        self.Kp_stuck = 1.0   # スタック時のKp
         self.Kp = self.Kp_normal
 
         self.WHEEL_RADIUS = 0.13  # m
