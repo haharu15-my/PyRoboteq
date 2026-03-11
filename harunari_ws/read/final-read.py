@@ -63,7 +63,7 @@ class KeyboardPControl:
                     f"ACT:{act:+.2f} "
                     f"ERR:{err:+.2f} "
                     f"CMD:{cmd}"
-                    f" AMPS:{motor_amps}"
+                    f"AMPS:{motor_amps}"
                 )
 
                 time.sleep(self.dt)

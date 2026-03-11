@@ -19,17 +19,18 @@ class OpenLoopStuckKeyboardController:
 
         # ===== 速度指令 [m/s] =====
         self.NORMAL_SPEED = 0.1    # 通常走行速度
-        self.RECOVERY_SPEED = 0.13 # 回復速度
+        self.RECOVERY_SPEED = 0.13 # 脱出速度
+        #self.RECOVERY_SPEED = self.NORMAL_SPEED * 0.13        # 脱出動作は通常の1.3倍の速度で行う
 
         # ===== STUCK判定パラメータ =====
         self.RPM_THRESHOLD = 5     # [RPM] RPM停止閾値
-        self.RPM_STUCK_TIME = 1.0   # [s] RPM停止判定時間
+        self.RPM_STUCK_TIME = 1.0  # [s] RPM停止判定時間
 
         self.AMP_WINDOW_TIME = 0.1  # [s] 電流張り付き観測時間
-        self.AMP_VARIATION = 3.0        # [A] 電流張り付き変化量
+        self.AMP_VARIATION = 3.0    # [A] 電流張り付き変化量
 
-        self.STUCK_CONFIRM_TIME = 2.0       # [s] STUCK確定時間
-        self.RECOVERY_TIME = 5.0        # [s] 回復動作時間
+        self.STUCK_CONFIRM_TIME = 2.0  # [s] STUCK確定時間
+        self.RECOVERY_TIME = 5.0       # [s] 脱出動作時間
 
         # ===== 状態 =====
         self.state = "NORMAL"   # NORMAL / STUCK / RECOVERY / ERROR_STOP

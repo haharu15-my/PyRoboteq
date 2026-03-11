@@ -12,11 +12,11 @@ class KeyboardPIControl:
         self.controller.send_command(cmds.REL_EM_STOP)  # 緊急停止解除
 
         # PI制御パラメータ
-        self.Kp = 0.5
-        self.Ki = 0.2
-        self.I = 0.0
-        self.I_max = 50
-        self.I_min = -50
+        self.Kp = 0.5              # Pゲイン（まずは0.3〜0.8）
+        self.Ki = 0.2       # Iゲイン（まずは0.1〜0.3
+        self.I = 0.0     # 積分値
+        self.I_max = 50          # 積分飽和上限
+        self.I_min = -50        # 積分飽和下限
 
         self.WHEEL_RADIUS = 0.13   # [m] ← 実機に合わせる
         self.GEAR_RATIO = 25      # ギヤ比
