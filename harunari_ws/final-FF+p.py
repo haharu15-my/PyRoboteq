@@ -11,7 +11,7 @@ class FF_P_Controller:
         self.controller.send_command(cmds.REL_EM_STOP)
 
         # ===== パラメータ =====
-        self.Kp = 0.1                 # Pゲイン（まずは0.3〜0.8）
+        self.Kp = 0.8                 # Pゲイン（まずは0.3〜0.8）
         self.dt = 0.05
 
         self.MAX_CMD = 1000
