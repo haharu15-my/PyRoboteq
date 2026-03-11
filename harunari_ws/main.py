@@ -5,7 +5,7 @@ import math
 import keyboard
 
 class OpenLoopStuckKeyboardController:
-    def __init__(self, port="COM3"):
+    def __init__(self, port="COM3"):# 使用するシリアルポートを指定（Windows: COMポート / Linux: /dev/ttyACM0 など）
         # ===== コントローラ =====
         self.controller = RoboteqHandler(debug_mode=False, exit_on_interrupt=False)
         self.connected = self.controller.connect(port)
@@ -17,20 +17,19 @@ class OpenLoopStuckKeyboardController:
         self.GEAR_RATIO = 25
         self.dt = 0.05
 
-        # ===== 速度指令 [m/s] =
-        # ====
-        self.NORMAL_SPEED = 0.1
-        self.RECOVERY_SPEED = 0.13
+        # ===== 速度指令 [m/s] =====
+        self.NORMAL_SPEED = 0.1    # 通常走行速度
+        self.RECOVERY_SPEED = 0.13 # 回復速度
 
         # ===== STUCK判定パラメータ =====
-        self.RPM_THRESHOLD = 5
-        self.RPM_STUCK_TIME = 1.0
+        self.RPM_THRESHOLD = 5     # [RPM] RPM停止閾値
+        self.RPM_STUCK_TIME = 1.0   # [s] RPM停止判定時間
 
-        self.AMP_WINDOW_TIME = 0.1
-        self.AMP_VARIATION = 3.0
+        self.AMP_WINDOW_TIME = 0.1  # [s] 電流張り付き観測時間
+        self.AMP_VARIATION = 3.0        # [A] 電流張り付き変化量
 
-        self.STUCK_CONFIRM_TIME = 2.0
-        self.RECOVERY_TIME = 5.0
+        self.STUCK_CONFIRM_TIME = 2.0       # [s] STUCK確定時間
+        self.RECOVERY_TIME = 5.0        # [s] 回復動作時間
 
         # ===== 状態 =====
         self.state = "NORMAL"   # NORMAL / STUCK / RECOVERY / ERROR_STOP
@@ -45,7 +44,7 @@ class OpenLoopStuckKeyboardController:
         self.stuck_flag2 = False
 
     # --------------------------------------------------
-    # 速度[m/s] → Roboteq CMD
+    # 速度[m/s] → Roboteq CMD 例0.1 m/s → -100
     # --------------------------------------------------
     def speed_to_cmd(self, speed_mps):
         cmd = int(-speed_mps * 1000)
@@ -85,7 +84,7 @@ class OpenLoopStuckKeyboardController:
         if keyboard.is_pressed('w'):
             return self.NORMAL_SPEED, True, "w"
         elif keyboard.is_pressed('s'):
-            return -0.15, False, "s"
+            return -0.13, False, "s"
         elif keyboard.is_pressed('space'):
             return 0.0, False, "STOP"
         else:
@@ -183,15 +182,14 @@ class OpenLoopStuckKeyboardController:
                         self.stuck_confirm_start = None
 
                 print(
-                    f"{now:.2f},"
-                    f"{self.state},"
-                    f"{key},"
-                    f"{target_speed:.2f},"
-                    f"{act_speed:.3f},"
-                    f"{cmd},"
-                    f"{rpm:.1f},"
-                    f"{amp1:.1f},"
-                    f"{amp2:.1f}"
+                    #f"TIME:{now:.2f} | "
+                    f"STATE:{self.state} | "
+                    f"KEY:{key} | "
+                    f"TGT:{target_speed:.2f} m/s | "
+                    f"ACT:{act_speed:.3f} m/s | "
+                    f"CMD:{cmd} | "
+                    f"RPM:{rpm:.1f} | "
+                    f"AMP:{amp1:.1f},{amp2:.1f}"
                 )
 
 
