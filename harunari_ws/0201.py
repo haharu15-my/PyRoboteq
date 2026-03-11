@@ -19,7 +19,7 @@ class OpenLoopStuckKeyboardController:
 
         # ===== 速度指令 [m/s] =
         # ====
-        self.NORMAL_SPEED = 0.03
+        self.NORMAL_SPEED = 0.1
         self.RECOVERY_SPEED = 0.13
 
         # ===== STUCK判定パラメータ =====
@@ -85,7 +85,7 @@ class OpenLoopStuckKeyboardController:
         if keyboard.is_pressed('w'):
             return self.NORMAL_SPEED, True, "w"
         elif keyboard.is_pressed('s'):
-            return -0.15, False, "s"
+            return -0.13, False, "s"
         elif keyboard.is_pressed('space'):
             return 0.0, False, "STOP"
         else:
@@ -183,15 +183,14 @@ class OpenLoopStuckKeyboardController:
                         self.stuck_confirm_start = None
 
                 print(
-                    f"{now:.2f},"
-                    f"{self.state},"
-                    f"{key},"
-                    f"{target_speed:.2f},"
-                    f"{act_speed:.3f},"
-                    f"{cmd},"
-                    f"{rpm:.1f},"
-                    f"{amp1:.1f},"
-                    f"{amp2:.1f}"
+                    #f"TIME:{now:.2f} | "
+                    f"STATE:{self.state} | "
+                    f"KEY:{key} | "
+                    f"TGT:{target_speed:.2f} m/s | "
+                    f"ACT:{act_speed:.3f} m/s | "
+                    f"CMD:{cmd} | "
+                    f"RPM:{rpm:.1f} | "
+                    f"AMP:{amp1:.1f},{amp2:.1f}"
                 )
 
 
@@ -205,3 +204,5 @@ class OpenLoopStuckKeyboardController:
 
 if __name__ == "__main__":
     OpenLoopStuckKeyboardController("COM3").run()
+
+#===== End of File: harunari_ws/2.py =====

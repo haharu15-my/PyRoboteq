@@ -31,7 +31,7 @@ class AutoRunScenario:
         self.MAX_TOTAL_SEC = 30          # 念のため全体タイムアウト
 
         # ===== 指令値 =====
-        self.NORMAL_CMD = -120           # 例：前進CMD（あなたの符号系に合わせて）
+        self.NORMAL_CMD = -100           # 例：前進CMD（あなたの符号系に合わせて）
         self.RECOVERY_CMD = -130
         self.RECOVERY_SEC = 2.0
 
@@ -67,8 +67,7 @@ class AutoRunScenario:
         前進/停止の指令。ここもあなたの送信コマンドに合わせて差し替え。
         """
         # 例）dual channel の場合
-        self.controller.send_command(cmds.SET_COMMAND, 1, cmd)
-        self.controller.send_command(cmds.SET_COMMAND, 2, cmd)
+        self.controller.send_command(cmds.DUAL_DRIVE, cmd, cmd)
 
     def stop(self):
         self.set_cmd(0)
