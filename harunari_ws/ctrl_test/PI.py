@@ -12,23 +12,22 @@ class KeyboardPIControl:
         self.controller.send_command(cmds.REL_EM_STOP)  # 緊急停止解除
 
         # PI制御パラメータ
-        self.Kp = 0.5              # Pゲイン（まずは0.3〜0.8）
+        self.Kp = 0.5       # Pゲイン（まずは0.3〜0.8）
         self.Ki = 0.2       # Iゲイン（まずは0.1〜0.3
-        self.I = 0.0     # 積分値
-        self.I_max = 50          # 積分飽和上限
-        self.I_min = -50        # 積分飽和下限
+        self.I = 0.0        # 積分値
+        self.I_max = 50     # 積分飽和上限
+        self.I_min = -50    # 積分飽和下限
 
-        self.WHEEL_RADIUS = 0.13   # [m] ← 実機に合わせる
+        self.WHEEL_RADIUS = 0.13  # [m] ← 実機に合わせる
         self.GEAR_RATIO = 25      # ギヤ比
 
         # 速度制御
-        self.target_speed = 0.0
+        self.target_speed = 0.0  # キーボード入力からの目標速度
         self.actual_speed = 0.0  # 実際はモータから取得
         self.cmd = 0
 
     def read_actual_speed(self):
-        # モータRPM取得（CH1を代表として使用）
-        raw_rpm = self.controller.read_value(cmds.READ_BL_MOTOR_RPM, 1)
+        raw_rpm = self.controller.read_value(cmds.READ_BL_MOTOR_RPM, 1)  # モータRPM取得（CH1を代表として使用）
 
         # Roboteqの返り値対策
         if isinstance(raw_rpm, str) and '=' in raw_rpm:
