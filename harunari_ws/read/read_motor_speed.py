@@ -20,23 +20,23 @@ if __name__ == "__main__":
 
             elif keyboard.is_pressed('r'):#後退
                 print("S pressed")
-                drive_speed_motor_one = -300
-                drive_speed_motor_two = -300
+                drive_speed_motor_one = -100
+                drive_speed_motor_two = -100
             
             elif keyboard.is_pressed('s'):#後退
                 print("S pressed")
-                drive_speed_motor_one = 200
-                drive_speed_motor_two = 200
+                drive_speed_motor_one = 100
+                drive_speed_motor_two = 100
 
             elif keyboard.is_pressed('a'):#左回転
                 print("A is pressed")
-                drive_speed_motor_one = -200
-                drive_speed_motor_two = 200
+                drive_speed_motor_one = -100
+                drive_speed_motor_two = 100
 
             elif keyboard.is_pressed('d'):#右回転
                 print("D is pressed")
-                drive_speed_motor_one = 200
-                drive_speed_motor_two = -200
+                drive_speed_motor_one = 100
+                drive_speed_motor_two = -100
 
             # Motor will automatically stop if no command is sent.
             else:
